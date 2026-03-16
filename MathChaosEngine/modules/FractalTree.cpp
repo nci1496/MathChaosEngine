@@ -55,15 +55,20 @@ void FractalTree::render(CDC* pDC)
     {
         growthProgress = maxProgress;
     }
+    CPen pen;
+    CPen* oldPen = nullptr;
 
     for (auto& branch : branches) {
         double delay = (maxDepth - branch.depth) / (double)maxDepth;
+        double progress = growthProgress - delay;
 
-        branch.progress = growthProgress - delay;
 
-        if (branch.progress < 0) { branch.progress = 0; }
 
-        if (branch.progress >1 ) { branch.progress = 1; }
+        if (progress <= 0) { continue; }
+
+        if (progress >1 ) { progress = 1; }
+
+        branch.progress = progress;
 
         // —’…´º∆À„
         double depthFactor = 1.0 - (branch.depth / (double)maxDepth);
@@ -73,19 +78,16 @@ void FractalTree::render(CDC* pDC)
         Vec2 currentEnd = branch.currentEnd();
 
         // ª≠± ¥÷œ∏
-        /*int penWidth = std::max(1, (int)(branch.depth * 1.5 * branch.progress));*/
-        int penWidthVal = (int)(branch.depth * 1.5 * branch.progress);
-        int penWidth = std::max<int>(1, penWidthVal);
-
-
-
-        CPen pen(PS_SOLID, penWidth, color);
-        CPen *pOldPen = pDC->SelectObject(&pen);
+        int penWidth = std::max<int>(1, (int)(branch.depth * 1.5 * branch.progress));
+        
+        pen.DeleteObject();
+        pen.CreatePen(PS_SOLID, penWidth, color);
+        oldPen = pDC->SelectObject(&pen);
 
         pDC->MoveTo((int)branch.start.x, (int)branch.start.y);
         pDC->LineTo((int)currentEnd.x, (int)currentEnd.y);
 
-        pDC->SelectObject(pOldPen);
+        pDC->SelectObject(oldPen);
     }
 
 
@@ -104,6 +106,14 @@ void FractalTree::generateBranches(Vec2 pos, double length, double angle, int de
 
     //TRACE(_T("  ÷’µ„: (%.1f,%.1f)\n"), end.x, end.y);
 
+    if (depth <= 0 || length < 3)
+    {
+        return;
+    }
+    if (branches.size() > 5000)
+    {
+        return;
+    }
 
     // ¥Ê¥¢’‚Ãı ˜÷¶
     addBranch(pos, end, depth, length, angle);
