@@ -183,20 +183,36 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="core\Engine.h" />
+    <ClInclude Include="core\Module.h" />
+    <ClInclude Include="core\pch.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MathChaosEngine.h" />
     <ClInclude Include="MathChaosEngineDoc.h" />
     <ClInclude Include="MathChaosEngineView.h" />
+    <ClInclude Include="math\ColorGradient.h" />
+    <ClInclude Include="math\Random.h" />
+    <ClInclude Include="math\Vec2.h" />
+    <ClInclude Include="math\Vec3.h" />
+    <ClInclude Include="modules\FractalTree.h" />
+    <ClInclude Include="modules\pch.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="core\Engine.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MathChaosEngine.cpp" />
     <ClCompile Include="MathChaosEngineDoc.cpp" />
     <ClCompile Include="MathChaosEngineView.cpp" />
+    <ClCompile Include="modules\FractalTree.cpp" />
+    <ClCompile Include="modules\Julia.cpp" />
+    <ClCompile Include="modules\Lorenz.cpp" />
+    <ClCompile Include="modules\Mandelbrot.cpp" />
+    <ClCompile Include="modules\ParticleLife.cpp" />
+    <ClCompile Include="modules\ReactionDiffusion.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -4,12 +4,22 @@
 
 #pragma once
 
+#include "core/Engine.h"
+#include "modules/FractalTree.h"
+
 
 class CMathChaosEngineView : public CView
 {
 protected: // 仅从序列化创建
 	CMathChaosEngineView() noexcept;
 	DECLARE_DYNCREATE(CMathChaosEngineView)
+
+	//成员
+protected:
+    Engine m_engine;
+    FractalTree m_tree;
+	int m_timerID;
+
 
 // 特性
 public:
@@ -40,6 +50,11 @@ protected:
 // 生成的消息映射函数
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	virtual void OnInitialUpdate();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // MathChaosEngineView.cpp 中的调试版本
