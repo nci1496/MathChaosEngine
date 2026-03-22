@@ -17,9 +17,14 @@ protected: // 仅从序列化创建
 	//成员
 protected:
     Engine m_engine;
-    FractalTree m_tree;
+
+
+	std::vector<FractalTree>m_trees;
+	TreeMode m_currentTreeMode = LESS_RANDOM;
+
 	int m_timerID;
 
+	float m_time = 0.0f;//用于动态背景 //test only
 
 // 特性
 public:
@@ -55,6 +60,7 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // MathChaosEngineView.cpp 中的调试版本

@@ -7,6 +7,11 @@
 
 #include<vector>
 
+enum TreeMode {
+    LESS_RANDOM,
+    MORE_RANDOM
+};
+
 
 class FractalTree : public Module
 {
@@ -36,10 +41,14 @@ private:
 
     ColorGradient colorScheme;//‘§∂®“Â—’…´
 
-    void generateBranches(Vec2 pos, double length, double angle, int depth);
+    void FractalTree::generateBranches(Vec2 pos, double length, double angle, int depth);
+    void generateBranchesLessRandom(Vec2 pos, double length, double angle, int depth);
+    void generateBranchesMoreRandom(Vec2 pos, double length, double angle, int depth);
     void addBranch(const Vec2& start, const Vec2& end, int depth, double len, double ang);
 
 public:
+
+    TreeMode mode;
 
     Vec2 viewSize;
 

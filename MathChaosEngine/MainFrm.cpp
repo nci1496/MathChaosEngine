@@ -73,6 +73,8 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 		return FALSE;
 	// TODO: 在此处通过修改
 	//  CREATESTRUCT cs 来修改窗口类或样式
+	cs.style &= ~FWS_ADDTOTITLE;
+	cs.lpszName = _T("MathChaosEngine"); 
 
 	return TRUE;
 }

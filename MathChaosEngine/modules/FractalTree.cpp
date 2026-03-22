@@ -1,4 +1,4 @@
-#include "pch.h" 
+Ôªø#include "pch.h" 
 #include "FractalTree.h"
 
 #define _USE_MATH_DEFINES
@@ -16,6 +16,8 @@ FractalTree::FractalTree():growthProgress(0),maxProgress(1.0),maxDepth(g_Random.
     viewSize = Vec2(1200, 800);
     colorScheme = ColorGradient::forest();
 
+    mode = LESS_RANDOM;
+
 }
 
 void FractalTree::reset() {
@@ -32,7 +34,6 @@ void FractalTree::update(double dt)
         for (auto& branch : branches) {
             double depthDelay = (maxDepth - branch.depth) * 0.1;
             double branchProgress = (growthProgress - depthDelay) * 1.5;
-            /*branch.progress = std::max(0.0, std::min(1.0, branchProgress));*/
             branch.progress = std::max<double>(0.0, std::min<double>(1.0, branchProgress));
 
         }
@@ -43,13 +44,9 @@ void FractalTree::update(double dt)
 void FractalTree::render(CDC* pDC)
 {
 
-    TRACE(_T("branches size = %d\n"), branches.size());
-
     CRect rect;
     pDC->GetClipBox(&rect);
     viewSize = Vec2(rect.Width(), rect.Height());
-
-    growthProgress += 0.01;
 
     if (growthProgress > maxProgress)
     {
@@ -70,14 +67,14 @@ void FractalTree::render(CDC* pDC)
 
         branch.progress = progress;
 
-        // —’…´º∆À„
+        // È¢úËâ≤ËÆ°ÁÆó
         double depthFactor = 1.0 - (branch.depth / (double)maxDepth);
         double colorT = depthFactor * 0.7 + branch.progress * 0.3;
         COLORREF color = colorScheme.getColor(colorT);
-        // µ±«∞∂Àµ„
+        // ÂΩìÂâçÁ´ØÁÇπ
         Vec2 currentEnd = branch.currentEnd();
 
-        // ª≠± ¥÷œ∏
+        // ÁîªÁ¨îÁ≤óÁªÜ
         int penWidth = std::max<int>(1, (int)(branch.depth * 1.5 * branch.progress));
         
         pen.DeleteObject();
@@ -94,17 +91,24 @@ void FractalTree::render(CDC* pDC)
 }
 
 void FractalTree::generateBranches(Vec2 pos, double length, double angle, int depth)
-{
+{ 
+    if (mode == LESS_RANDOM) {
+        generateBranchesLessRandom(rootPos, baseLength, -M_PI / 2, maxDepth);
+    }
+    else {
+        generateBranchesMoreRandom(rootPos, baseLength, -M_PI / 2, maxDepth);
+    }   
+}
 
-    //TRACE(_T("generateBranches: depth=%d, pos=(%.1f,%.1f)\n"), depth, pos.x, pos.y);
+
+
+void FractalTree::generateBranchesLessRandom(Vec2 pos, double length, double angle, int depth)
+{
 
     if (depth <= 0) return;
 
-    // º∆À„÷’µ„
+    // ËÆ°ÁÆóÁªàÁÇπ
     Vec2 end = pos + Vec2(length * cos(angle), length * sin(angle));
-
-
-    //TRACE(_T("  ÷’µ„: (%.1f,%.1f)\n"), end.x, end.y);
 
     if (depth <= 0 || length < 3)
     {
@@ -115,17 +119,67 @@ void FractalTree::generateBranches(Vec2 pos, double length, double angle, int de
         return;
     }
 
-    // ¥Ê¥¢’‚Ãı ˜÷¶
+    // Â≠òÂÇ®ËøôÊù°Ê†ëÊûù
     addBranch(pos, end, depth, length, angle);
 
-    // ÀÊª˙±‰ªØ£∫≥§∂»∫ÕΩ«∂»
+    // ÈöèÊú∫ÂèòÂåñÔºöÈïøÂ∫¶ÂíåËßíÂ∫¶
     double newLength = length * g_Random.range(0.65, 0.75);
     double angleOffset = g_Random.range(-5.0, 5.0) * M_PI / 180.0;
 
-    // µ›πÈ…˙≥…◊Û”“∑÷÷ß
-    generateBranches(end, newLength, angle + branchAngle + angleOffset, depth - 1);
-    generateBranches(end, newLength, angle - branchAngle + angleOffset, depth - 1);
+    // ÈÄíÂΩíÁîüÊàêÂ∑¶Âè≥ÂàÜÊîØ
+    generateBranchesLessRandom(end, newLength, angle + branchAngle + angleOffset, depth - 1);
+    generateBranchesLessRandom(end, newLength, angle - branchAngle + angleOffset, depth - 1);
 
+}
+
+
+void FractalTree::generateBranchesMoreRandom(Vec2 pos, double length, double angle, int depth)
+{
+    if (depth <= 0 || length < 3 || branches.size() > 2000)
+        return;
+
+    Vec2 end = pos + Vec2(length * cos(angle), length * sin(angle));
+    addBranch(pos, end, depth, length, angle);
+
+    double newLength = length * g_Random.range(0.7, 0.78);
+
+    int level = maxDepth - depth;
+
+    int childCount;
+
+    // ÂâçÊúü
+    if (level < 2)
+        childCount = 2;
+
+    // ‰∏≠ÊúüÔºöÁ®çÂæÆ‰∏∞ÂØå
+    else if (level < 5)
+        childCount = g_Random.range(2, 3);
+
+    // ÂêéÊúüÔºöÂáèÂ∞ëÂØÜÂ∫¶
+    else
+    {
+        if (g_Random.range(0.0, 1.0) <= 0.05) { return; }//ÈöèÊú∫Á≠õ
+        childCount = g_Random.range(1, 2);
+    }
+    // ÊâáÂΩ¢Â±ïÂºÄ
+
+    double levelRatio = (maxDepth - depth) / (double)maxDepth;
+
+    double spread = branchAngle * (1.2 + 5*levelRatio);
+
+    for (int i = 0; i < childCount; i++)
+    {
+        double t = (childCount == 1) ? 0.5 : (double)i / (childCount - 1);
+
+        double baseOffset = -spread / 2 + t * spread;
+
+        // Â∞èÊâ∞Âä®
+        double jitter = g_Random.range(-0.15, 0.15) * branchAngle;
+
+        double newAngle = angle + baseOffset + jitter;
+
+        generateBranchesMoreRandom(end, newLength, newAngle, depth - 1);
+    }
 }
 
 void FractalTree::addBranch(const Vec2& start, const Vec2& end, int depth, double len, double ang)
@@ -150,11 +204,15 @@ void FractalTree::onMouseDown(int x, int y)
     rootPos = Vec2(x, y);
 
     setRandomColorScheme();
-    randomizeParameters();  // ÀÊª˙ªØÀ˘”–≤Œ ˝
-    generateBranches(rootPos, baseLength, -M_PI / 2, maxDepth);
-    TRACE(_T("Total branches generated = %d\n"), branches.size());
+    randomizeParameters();  // ÈöèÊú∫ÂåñÊâÄÊúâÂèÇÊï∞
 
+    generateBranches(rootPos, baseLength, -M_PI / 2, maxDepth);
 }
+
+
+
+
+
 
 void FractalTree::setColorScheme(const ColorGradient& scheme)
 {
@@ -175,7 +233,7 @@ void FractalTree::setRandomColorScheme()
 
 void FractalTree::randomizeParameters()
 {
-    //  π”√Õ≥“ªµƒRandom¿‡
+    // ‰ΩøÁî®Áªü‰∏ÄÁöÑRandomÁ±ª
     branchAngle = g_Random.range(20.0, 35.0) * M_PI / 180.0;
     baseLength = g_Random.range(80.0, 150.0);
     maxDepth = g_Random.range(8, 14);
@@ -188,29 +246,3 @@ void FractalTree::setRoot(Vec2 pos)
     generateBranches(rootPos, baseLength, -M_PI / 2, maxDepth);
 
 }
-
-
-
-
-//void FractalTree::drawBranch(CDC* pDC, double x, double y, double length, double ang, int depth)
-//{
-//    if (depth <= 0)
-//    {
-//        return;
-//    }
-//
-//    double x2 = x + length * cos(ang);
-//    double y2 = y + length * sin(ang);
-//
-//    // ∏˘æ›…Ó∂»…Ë÷√—’…´∫Õ¥÷œ∏
-//    CPen pen(PS_SOLID, depth, RGB(0, 128, 0));  // ¬Ã…´£¨…Ó∂»‘Ω¥Û‘Ω¥÷
-//    CPen* pOldPen = pDC->SelectObject(&pen);
-//
-//    pDC->MoveTo((int)x, (int)y);
-//    pDC->LineTo((int)x2, (int)y2);
-//
-//    pDC->SelectObject(pOldPen);
-//    
-//    drawBranch(pDC, x2, y2, length * 0.7, ang + angle, depth - 1);
-//    drawBranch(pDC, x2, y2, length * 0.7, ang - angle, depth - 1);
-//}
