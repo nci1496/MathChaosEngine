@@ -78,6 +78,9 @@
     <ClInclude Include="modules\Mandelbrot.h">
       <Filter>modules</Filter>
     </ClInclude>
+    <ClInclude Include="modules\Julia.h">
+      <Filter>modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MathChaosEngine.cpp">

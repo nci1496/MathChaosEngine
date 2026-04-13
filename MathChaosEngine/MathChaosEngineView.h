@@ -7,6 +7,7 @@
 #include "core/Engine.h"
 #include "modules/FractalTree.h"
 #include "modules/Mandelbrot.h"
+#include "modules/Julia.h"
 
 
 class CMathChaosEngineView : public CView
@@ -26,6 +27,21 @@ protected:
 
     SceneMode m_sceneMode = SCENE_TREE;
     Mandelbrot m_mandelbrot;
+    JuliaSet m_julia;
+    int m_fractalPowerN = 2;
+    Mandelbrot::FractalFamily m_fractalFamily = Mandelbrot::FAMILY_MULTIBROT;
+    bool m_juliaLinked = true;
+    bool m_juliaFrozen = false;
+    CRect m_juliaPanelRect;
+    bool m_mandelbrotClickCandidate = false;
+    CPoint m_mandelbrotClickStart;
+
+    enum ActiveDragTarget {
+        DRAG_NONE = 0,
+        DRAG_MANDELBROT = 1,
+        DRAG_JULIA = 2
+    };
+    ActiveDragTarget m_activeDragTarget = DRAG_NONE;
 
 	std::vector<FractalTree>m_trees;
 	TreeMode m_currentTreeMode = LESS_RANDOM;

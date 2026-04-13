@@ -34,6 +34,8 @@ Mandelbrot::Mandelbrot()
       m_timeBudgetMs(8),
       m_iterBase(180),
       m_iterCap(1400),
+      m_powerN(2),
+      m_family(FAMILY_MULTIBROT),
       m_nextTile(0),
       m_dragging(false),
       m_boxZoomMode(false),
@@ -241,23 +243,6 @@ void Mandelbrot::onMouseDragEnd(int x, int y)
     {
         committed = isDifferentView(m_beforeInteractionView, m_view);
     }
-    else if (!m_boxZoomMode)
-    {
-        double anchorX = 0.0;
-        double anchorY = 0.0;
-        screenToComplex(x, y, anchorX, anchorY);
-
-        m_view.zoom *= 1.8;
-
-        double afterX = 0.0;
-        double afterY = 0.0;
-        screenToComplex(x, y, afterX, afterY);
-
-        m_view.centerX += (anchorX - afterX);
-        m_view.centerY += (anchorY - afterY);
-        committed = isDifferentView(m_beforeInteractionView, m_view);
-    }
-
     m_dragging = false;
     m_boxZoomMode = false;
 
@@ -334,6 +319,28 @@ void Mandelbrot::setQuality(QualityPreset quality)
     beginProgressiveRender();
 }
 
+void Mandelbrot::setPower(int n)
+{
+    const int clamped = clampPower(n);
+    if (m_powerN == clamped)
+    {
+        return;
+    }
+
+    m_powerN = clamped;
+    beginProgressiveRender();
+}
+
+void Mandelbrot::setFamily(FractalFamily family)
+{
+    if (m_family == family)
+    {
+        return;
+    }
+    m_family = family;
+    beginProgressiveRender();
+}
+
 bool Mandelbrot::isRendering() const
 {
     return m_stage != STAGE_FINAL || m_dirty;
@@ -344,6 +351,28 @@ bool Mandelbrot::consumePixelsChanged()
     const bool changed = m_pixelsChanged;
     m_pixelsChanged = false;
     return changed;
+}
+
+bool Mandelbrot::getComplexAtScreen(int sx, int sy, double& outX, double& outY) const
+{
+    if (m_viewWidth <= 0 || m_viewHeight <= 0)
+    {
+        return false;
+    }
+
+    screenToComplex(sx, sy, outX, outY);
+    return true;
+}
+
+bool Mandelbrot::getScreenForComplex(double x, double y, int& outSx, int& outSy) const
+{
+    if (m_viewWidth <= 0 || m_viewHeight <= 0)
+    {
+        return false;
+    }
+
+    complexToScreen(x, y, outSx, outSy);
+    return true;
 }
 
 bool Mandelbrot::isBoxZoomActive() const
@@ -374,6 +403,16 @@ Mandelbrot::PaletteId Mandelbrot::getPalette() const
 Mandelbrot::QualityPreset Mandelbrot::getQuality() const
 {
     return m_quality;
+}
+
+int Mandelbrot::getPower() const
+{
+    return m_powerN;
+}
+
+Mandelbrot::FractalFamily Mandelbrot::getFamily() const
+{
+    return m_family;
 }
 
 double Mandelbrot::getZoom() const
@@ -587,20 +626,127 @@ int Mandelbrot::computeAdaptiveMaxIter() const
 {
     const double z = (std::max)(1.0, m_view.zoom);
     const double level = std::log2(z);
-    const int adaptive = m_iterBase + static_cast<int>(level * 18.0);
+    const int powerBoost = (m_powerN - 2) * 14;
+    const int adaptive = m_iterBase + static_cast<int>(level * 18.0) + powerBoost;
     return (std::min)(m_iterCap, (std::max)(48, adaptive));
+}
+
+int Mandelbrot::clampPower(int n) const
+{
+    return (std::max)(2, (std::min)(5, n));
 }
 
 std::uint32_t Mandelbrot::computeColor(double cx, double cy, int maxIter) const
 {
+    if (m_family == FAMILY_NEWTON)
+    {
+        double zx = cx;
+        double zy = cy;
+        int iter = 0;
+
+        auto powerOf = [](double x, double y, int p, double& ox, double& oy) {
+            if (p <= 0) { ox = 1.0; oy = 0.0; return; }
+            double rx = x;
+            double ry = y;
+            for (int i = 1; i < p; ++i)
+            {
+                const double nx = rx * x - ry * y;
+                const double ny = rx * y + ry * x;
+                rx = nx;
+                ry = ny;
+            }
+            ox = rx;
+            oy = ry;
+        };
+
+        for (; iter < maxIter; ++iter)
+        {
+            double zNRe = 0.0, zNIm = 0.0;
+            double zNm1Re = 0.0, zNm1Im = 0.0;
+            powerOf(zx, zy, m_powerN, zNRe, zNIm);
+            powerOf(zx, zy, m_powerN - 1, zNm1Re, zNm1Im);
+
+            const double fRe = zNRe - 1.0;
+            const double fIm = zNIm;
+            const double fNorm = std::sqrt(fRe * fRe + fIm * fIm);
+            if (fNorm < 1e-6)
+            {
+                break;
+            }
+
+            const double dRe = static_cast<double>(m_powerN) * zNm1Re;
+            const double dIm = static_cast<double>(m_powerN) * zNm1Im;
+            const double den = dRe * dRe + dIm * dIm;
+            if (den < 1e-18)
+            {
+                break;
+            }
+
+            const double qRe = (fRe * dRe + fIm * dIm) / den;
+            const double qIm = (fIm * dRe - fRe * dIm) / den;
+            zx -= qRe;
+            zy -= qIm;
+
+            if (!std::isfinite(zx) || !std::isfinite(zy))
+            {
+                return makeBgr(6, 6, 10);
+            }
+        }
+
+        double finalNRe = 0.0, finalNIm = 0.0;
+        powerOf(zx, zy, m_powerN, finalNRe, finalNIm);
+        const double fr = finalNRe - 1.0;
+        const double fi = finalNIm;
+        const bool converged = (fr * fr + fi * fi) < 1e-4;
+        if (!converged)
+        {
+            return makeBgr(6, 6, 10);
+        }
+
+        const double twoPi = 6.283185307179586;
+        double angle = std::atan2(zy, zx);
+        if (angle < 0.0) angle += twoPi;
+        const double sector = twoPi / static_cast<double>(m_powerN);
+        int rootIndex = static_cast<int>(std::floor((angle + sector * 0.5) / sector)) % m_powerN;
+        if (rootIndex < 0) rootIndex += m_powerN;
+
+        const int baseColors[6][3] = {
+            {250, 86, 72}, {66, 180, 255}, {255, 216, 84},
+            {128, 214, 130}, {195, 120, 255}, {255, 150, 210}
+        };
+
+        const double depth = Clamp01(static_cast<double>(iter) / static_cast<double>((std::max)(1, maxIter)));
+        const double gain = 0.35 + 0.65 * (1.0 - depth);
+        const int* bc = baseColors[rootIndex % 6];
+        return makeBgr(
+            static_cast<int>(bc[0] * gain),
+            static_cast<int>(bc[1] * gain),
+            static_cast<int>(bc[2] * gain));
+    }
+
     double zx = 0.0;
     double zy = 0.0;
     int iter = 0;
 
     while ((zx * zx + zy * zy) <= 4.0 && iter < maxIter)
     {
-        const double nextX = zx * zx - zy * zy + cx;
-        const double nextY = 2.0 * zx * zy + cy;
+        double powX = 0.0;
+        double powY = 0.0;
+        if (m_family == FAMILY_BURNING_SHIP)
+        {
+            applyPower(std::abs(zx), std::abs(zy), powX, powY);
+        }
+        else
+        {
+            applyPower(zx, zy, powX, powY);
+        }
+
+        const double nextX = powX + cx;
+        const double nextY = powY + cy;
+        if (!std::isfinite(nextX) || !std::isfinite(nextY))
+        {
+            break;
+        }
         zx = nextX;
         zy = nextY;
         ++iter;
@@ -618,6 +764,30 @@ std::uint32_t Mandelbrot::computeColor(double cx, double cy, int maxIter) const
     const double t = Clamp01(smoothIter / static_cast<double>(maxIter));
 
     return colorFromNormalized(t, false);
+}
+
+void Mandelbrot::applyPower(double zx, double zy, double& outX, double& outY) const
+{
+    if (m_powerN <= 2)
+    {
+        outX = zx * zx - zy * zy;
+        outY = 2.0 * zx * zy;
+        return;
+    }
+
+    double rx = zx;
+    double ry = zy;
+    double ax = zx;
+    double ay = zy;
+    for (int i = 1; i < m_powerN; ++i)
+    {
+        const double nx = rx * ax - ry * ay;
+        const double ny = rx * ay + ry * ax;
+        rx = nx;
+        ry = ny;
+    }
+    outX = rx;
+    outY = ry;
 }
 
 std::uint32_t Mandelbrot::colorFromNormalized(double t, bool inside) const

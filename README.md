@@ -2,7 +2,7 @@
 
 A lightweight mathematical visualization engine built with VS2022 + MFC.
 
-MathChaosEngine explores the beauty of mathematics through fractals, chaotic systems, and generative visuals.
+MathChaosEngine explores the beauty of mathematics through fractals, chaos systems, and generative visuals.
 
 ---
 
@@ -12,70 +12,63 @@ MathChaosEngine explores the beauty of mathematics through fractals, chaotic sys
 
 ![Gameplay Demo2](./demo2.gif)
 
-![Gameplay screenshot](./screenshot.png)
+![Mandelbrot](./mandelbrot.png)
 
-![Gameplay screenshot2](./screenshot2.png)
+![Mandelbrot + Julia](./mandelbrot2.png)
 
-![Gameplay screenshot3](./screenshot3.png)
+![Multibrot n=4 + Julia](./multibrot_n=4_&julia.png)
 
-![Mandelbrot Explorer](./mandelbrot.png)
+![Multibrot n=5 + Julia](./multibrot_n=5_&julia.png)
 
+![Burning Ship](./burningship.png)
 
+![Newton n=3](./newton_n=3.png)
 
-![Mandelbrot Explorer](D:\Code\Class\MFC\MathChaosEngine\mandelbrot2.png)
+![Newton n=4](./newton_n=4.png)
 
-
+![Newton n=5](./newton_n=5.png)
 
 ---
 
 ## Current Features
 
 - Fractal Tree module (animated growth, random style variants)
-- Dynamic gradient background (breathing effect)
-- Mandelbrot Explorer (progressive rendering + interactive navigation)
-- Double-buffered rendering to reduce flicker
-- Modular architecture for adding more math modules
+- Progressive Mandelbrot Explorer (`Preview -> Refining -> Final`)
+- Julia linked preview window (live/frozen `c` modes)
+- Multibrot (`z^n + c`, `n=2/3/4/5`)
+- Burning Ship fractal family
+- Newton Fractal (`z^n - 1 = 0`, configurable degree)
+- Palette system: Scientific / Neon / Monochrome
+- Quality presets: Fast / Balanced / Detail
+- Double-buffered GDI rendering with DIB blit pipeline
 
 ---
 
-## Mandelbrot Explorer (New)
-
-### Performance
-
-- Progressive render pipeline: `Preview -> Refining -> Final`
-- Time-sliced computation per frame to keep UI responsive
-- Tile-based refinement for better perceived smoothness
-- Adaptive iteration count based on zoom level
-
-### Interaction
+## Interaction (Mandelbrot Scene)
 
 - Mouse wheel: zoom around cursor
 - Left drag: pan
 - `Shift + Left drag`: box zoom
-- Left click: quick zoom-in
+- Left click (main fractal): freeze/unfreeze Julia `c` sample
 - `Backspace`: go back in history
-- Context menu: reset / zoom out / back / home
+- Right-click menu:
+  - Fractal family (`Multibrot / Burning Ship / Newton`)
+  - Power `n` presets (`2 / 3 / 4 / 5`)
+  - Palette, quality, reset/home/back, Julia link/freeze toggles
 
-### Visual Styles
+### Julia Panel Interaction
 
-- Scientific
-- Neon
-- Monochrome
-
-### Quality Presets
-
-- Fast
-- Balanced
-- Detail
+- Drag to pan
+- Mouse wheel to zoom
+- `Shift + Left drag` for box zoom
+- Independent exploration while linked to main scene settings
 
 ---
 
-## Planned Modules
+## Planned Next Modules
 
-- Fractal Tree (implemented)
-- Mandelbrot Set (implemented, explorer phase)
-- Julia Set (next step: linked with Mandelbrot)
 - Lorenz Attractor
+- Logistic bifurcation map
 - Particle Life Simulation
 - Reaction-Diffusion
 
@@ -83,11 +76,11 @@ MathChaosEngine explores the beauty of mathematics through fractals, chaotic sys
 
 ## Tech Highlights
 
-- MFC `CDC`-based custom rendering pipeline
-- DIB blit rendering for efficient full-frame updates
-- Progressive fractal computation with stage management
-- Palette-based color system with smooth coloring
-- Extensible module interface (`Module`, `Engine`)
+- MFC `CDC` custom renderer
+- Progressive tile-based fractal rendering
+- Time-budgeted update loop for responsive interaction
+- Shared fractal configuration across main view and Julia panel
+- Extensible module architecture (`Module`, `Engine`)
 
 ---
 
