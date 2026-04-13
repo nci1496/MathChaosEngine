@@ -75,6 +75,9 @@
     <ClInclude Include="math\ColorGradient.h">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="modules\Mandelbrot.h">
+      <Filter>modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MathChaosEngine.cpp">

@@ -197,6 +197,7 @@
     <ClInclude Include="math\Vec2.h" />
     <ClInclude Include="math\Vec3.h" />
     <ClInclude Include="modules\FractalTree.h" />
+    <ClInclude Include="modules\Mandelbrot.h" />
     <ClInclude Include="modules\pch.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
